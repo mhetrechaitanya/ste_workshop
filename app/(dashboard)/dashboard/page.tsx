@@ -30,6 +30,7 @@ import { WorkshopStatusChart } from "@/components/dashboard/workshop-status-char
 import { StudentsByWorkshopChart } from "@/components/dashboard/students-by-workshop-chart"
 // Import the RandomQuote component
 import { RandomQuote } from "@/components/dashboard/random-quote"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
 
 interface DashboardStats {
   totalWorkshops: number
@@ -202,49 +203,56 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
-              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Workshops</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+2350</div>
-              <p className="text-xs text-muted-foreground">+180.1% from last month</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Batches</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+12,234</div>
-              <p className="text-xs text-muted-foreground">+19% from last month</p>
-            </CardContent>
-          </Card>
-        </div>
+  <Card className="col-span-2">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+      <DollarSign className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">
+        <AnimatedCounter to={500} prefix="₹" />
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Total Workshops</CardTitle>
+      <Users className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">
+        <AnimatedCounter to={stats.totalWorkshops} />
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Active Batches</CardTitle>
+      <CreditCard className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">
+        <AnimatedCounter to={stats.activeBatches} />
+      </div>
+    </CardContent>
+  </Card>
+</div>
+
+
 
         {/* Additional Stats Cards */}
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <RandomQuote />
-        </div>
+        </div> */}
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <RandomQuote />
+        {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <RandomQuote /> */}
           {/* Other dashboard components */}
-        </div>
+        {/* </div> */}
 
-        <div className="grid gap-4 md:grid-cols-3">
+        {/* <div className="grid gap-4 md:grid-cols-3">
           <Card className="overflow-hidden border-none shadow-md transition-all hover:shadow-lg">
             <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
@@ -323,10 +331,10 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         {/* Quick Actions */}
-        <div>
+        {/* <div>
           <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <QuickActionButton
@@ -354,10 +362,10 @@ export default function DashboardPage() {
               color="emerald-500"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Charts */}
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* <div className="grid gap-6 md:grid-cols-2">
           <Card className="border-none shadow-md overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-stei-red to-stei-red/50"></div>
             <CardHeader>
@@ -377,10 +385,10 @@ export default function DashboardPage() {
               <StudentEnrollmentChart />
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         {/* Additional Charts */}
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* <div className="grid gap-6 md:grid-cols-2">
           <Card className="border-none shadow-md overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-500/50"></div>
             <CardHeader>
@@ -400,7 +408,7 @@ export default function DashboardPage() {
               <StudentsByWorkshopChart />
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         {/* Recent Data */}
         <div className="grid gap-6 md:grid-cols-2">

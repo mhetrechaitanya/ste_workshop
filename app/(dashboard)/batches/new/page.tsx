@@ -1,26 +1,50 @@
-"use client"
+"use client";
 
-import { useForm, useFieldArray } from "react-hook-form"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Clock, Plus, Trash2 } from "lucide-react"
-import { format } from "date-fns"
-import { Separator } from "@/components/ui/separator"
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import { Loader2 } from "lucide-react"
-import { Link } from "@/components/ui/link"
+import { useForm, useFieldArray } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon, Clock, Plus, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+import { Link } from "@/components/ui/link";
 
 // Import zod resolver from a compatible package
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const batchSchema = z.object({
   batchName: z.string().min(2, {
@@ -57,7 +81,7 @@ const batchSchema = z.object({
   zoomId: z.string().optional(),
   zoomPassword: z.string().optional(),
   status: z.string(),
-})
+});
 
 const formSchema = z.object({
   workshop: z.string({
@@ -66,23 +90,23 @@ const formSchema = z.object({
   batches: z.array(batchSchema).min(1, {
     message: "At least one batch is required.",
   }),
-})
+});
 
 interface Workshop {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function NewBatchPage() {
-  const { toast } = useToast()
-  const router = useRouter()
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [workshops, setWorkshops] = useState<Workshop[]>([])
-  const [isLoadingWorkshops, setIsLoadingWorkshops] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [isLoadingWorkshops, setIsLoadingWorkshops] = useState(true);
 
   // Get today's date for default values
-  const today = new Date()
+  const today = new Date();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -105,59 +129,64 @@ export default function NewBatchPage() {
         },
       ],
     },
-  })
+  });
 
-  const { control, handleSubmit } = form
+  const { control, handleSubmit } = form;
 
   useEffect(() => {
     const fetchWorkshops = async () => {
       try {
         setIsLoadingWorkshops(true);
-        const { data, error } = await supabase.from("workshops").select("id, name").order("name", { ascending: true })
+        const { data, error } = await supabase
+          .from("workshops")
+          .select("id, name")
+          .order("name", { ascending: true });
 
-        if (error) throw error
-        setWorkshops(data || [])
-        console.log("Fetched workshops:", data)
+        if (error) throw error;
+        setWorkshops(data || []);
+        console.log("Fetched workshops:", data);
       } catch (error) {
-        console.error("Error fetching workshops:", error)
+        console.error("Error fetching workshops:", error);
         toast({
           title: "Error",
           description: "Failed to load workshops. Please try again.",
           variant: "destructive",
-        })
+        });
       } finally {
-        setIsLoadingWorkshops(false)
+        setIsLoadingWorkshops(false);
       }
-    }
+    };
 
-    fetchWorkshops()
-  }, [toast])
+    fetchWorkshops();
+  }, [toast]);
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "batches",
-  })
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       // Create batches one by one
-      const createdBatches = []
+      const createdBatches = [];
 
       for (const batch of values.batches) {
         // Combine date and time for start and end dates
-        const startDateTime = new Date(batch.startDate)
-        const [startHours, startMinutes] = batch.startTime.split(":").map(Number)
-        startDateTime.setHours(startHours, startMinutes, 0)
+        const startDateTime = new Date(batch.startDate);
+        const [startHours, startMinutes] = batch.startTime
+          .split(":")
+          .map(Number);
+        startDateTime.setHours(startHours, startMinutes, 0);
 
-        const endDateTime = new Date(batch.endDate)
-        const [endHours, endMinutes] = batch.endTime.split(":").map(Number)
-        endDateTime.setHours(endHours, endMinutes, 0)
+        const endDateTime = new Date(batch.endDate);
+        const [endHours, endMinutes] = batch.endTime.split(":").map(Number);
+        endDateTime.setHours(endHours, endMinutes, 0);
 
         // Format dates for database
-        const startDate = startDateTime.toISOString()
-        const endDate = endDateTime.toISOString()
+        const startDate = startDateTime.toISOString();
+        const endDate = endDateTime.toISOString();
 
         // Insert batch into database
         const { data, error } = await supabase
@@ -177,30 +206,33 @@ export default function NewBatchPage() {
             zoom_password: batch.zoomPassword || null,
             status: batch.status,
           })
-          .select()
+          .select();
 
         if (error) {
-          throw new Error(`Failed to create batch: ${error.message}`)
+          throw new Error(`Failed to create batch: ${error.message}`);
         }
 
-        createdBatches.push(data[0])
+        createdBatches.push(data[0]);
       }
 
       toast({
         title: "Batches Created",
         description: `Successfully created ${values.batches.length} batch(es).`,
-      })
+      });
 
       // Navigate to batches page after successful creation
-      router.push("/batches")
+      router.push("/batches");
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create batches. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create batches. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -218,14 +250,16 @@ export default function NewBatchPage() {
       startTime: "09:00",
       endTime: "11:00",
       status: "upcoming",
-    })
+    });
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Add New Batch</h1>
-        <p className="text-muted-foreground">Create one or more workshop batches</p>
+        <p className="text-muted-foreground">
+          Create one or more workshop batches
+        </p>
       </div>
 
       <Form {...form}>
@@ -233,7 +267,9 @@ export default function NewBatchPage() {
           <Card>
             <CardHeader>
               <CardTitle>Workshop Selection</CardTitle>
-              <CardDescription>Select the workshop for these batches</CardDescription>
+              <CardDescription>
+                Select the workshop for these batches
+              </CardDescription>
             </CardHeader>
             <CardContent>
             <FormField
@@ -244,33 +280,23 @@ export default function NewBatchPage() {
       <FormLabel>Workshop</FormLabel>
       <Select
         onValueChange={(value) => {
-          // Safely handle the workshop change
-          // Wrap in setTimeout to avoid React re-rendering issues
           setTimeout(() => {
-            console.log("Selected workshop:", value);
-            field.onChange(value);
-            
-            // If you have any other form fields that need to be updated or reset
-            // // based on workshop selection, do it here AFTER the onChange
-            // if (resetDependentFields) {
-            //   resetDependentFields(value);
-            // }
-          }, 0);
+            console.log("Selected workshop:", value)
+            field.onChange(value)
+          }, 0)
         }}
-        value={field.value || ""}  // Ensure value is never undefined
+        value={field.value || ""}
         disabled={isLoadingWorkshops}
       >
         <FormControl>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={
-              isLoadingWorkshops 
-                ? "Loading workshops..." 
-                : "Select a workshop"
-            }>
-              {field.value
-                ? workshops.find((w) => w.id === field.value)?.name
-                : null}
-            </SelectValue>
+            <SelectValue
+              placeholder={
+                isLoadingWorkshops
+                  ? "Loading workshops..."
+                  : "Select a workshop"
+              }
+            />
           </SelectTrigger>
         </FormControl>
         <SelectContent>
@@ -288,9 +314,9 @@ export default function NewBatchPage() {
             </div>
           ) : (
             workshops.map((workshop) => (
-              <SelectItem 
-                key={workshop.id} 
-                value={workshop.id}
+              <SelectItem
+                key={workshop.id}
+                value={workshop.id.toString()} // Ensure string value
               >
                 {workshop.name}
               </SelectItem>
@@ -312,7 +338,9 @@ export default function NewBatchPage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Batch {index + 1} Details</CardTitle>
-                  <CardDescription>Enter the details for this batch</CardDescription>
+                  <CardDescription>
+                    Enter the details for this batch
+                  </CardDescription>
                 </div>
                 {index > 0 && (
                   <Button
@@ -337,7 +365,9 @@ export default function NewBatchPage() {
                         <FormControl>
                           <Input placeholder="Batch #4" {...field} />
                         </FormControl>
-                        <FormDescription>A unique name for this batch.</FormDescription>
+                        <FormDescription>
+                          A unique name for this batch.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -352,7 +382,9 @@ export default function NewBatchPage() {
                         <FormControl>
                           <Input placeholder="John Doe" {...field} />
                         </FormControl>
-                        <FormDescription>The primary instructor for this batch.</FormDescription>
+                        <FormDescription>
+                          The primary instructor for this batch.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -367,17 +399,33 @@ export default function NewBatchPage() {
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
-                              <Button variant={"outline"} className={"w-full justify-start text-left font-normal"}>
+                              <Button
+                                variant={"outline"}
+                                className={
+                                  "w-full justify-start text-left font-normal"
+                                }
+                              >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
                           </PopoverContent>
                         </Popover>
-                        <FormDescription>The start date of the batch.</FormDescription>
+                        <FormDescription>
+                          The start date of the batch.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -395,7 +443,9 @@ export default function NewBatchPage() {
                           </FormControl>
                           <Clock className="ml-2 h-4 w-4 text-muted-foreground" />
                         </div>
-                        <FormDescription>The start time of sessions.</FormDescription>
+                        <FormDescription>
+                          The start time of sessions.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -410,17 +460,33 @@ export default function NewBatchPage() {
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
-                              <Button variant={"outline"} className={"w-full justify-start text-left font-normal"}>
+                              <Button
+                                variant={"outline"}
+                                className={
+                                  "w-full justify-start text-left font-normal"
+                                }
+                              >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
                           </PopoverContent>
                         </Popover>
-                        <FormDescription>The end date of the batch.</FormDescription>
+                        <FormDescription>
+                          The end date of the batch.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -438,7 +504,9 @@ export default function NewBatchPage() {
                           </FormControl>
                           <Clock className="ml-2 h-4 w-4 text-muted-foreground" />
                         </div>
-                        <FormDescription>The end time of sessions.</FormDescription>
+                        <FormDescription>
+                          The end time of sessions.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -453,7 +521,9 @@ export default function NewBatchPage() {
                         <FormControl>
                           <Input placeholder="Mon, Wed, Fri" {...field} />
                         </FormControl>
-                        <FormDescription>The days of the week for this batch.</FormDescription>
+                        <FormDescription>
+                          The days of the week for this batch.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -466,9 +536,15 @@ export default function NewBatchPage() {
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <FormControl>
-                          <Input placeholder="Room 101, STEI Building" {...field} />
+                          <Input
+                            placeholder="Room 101, STEI Building"
+                            {...field}
+                          />
                         </FormControl>
-                        <FormDescription>The physical location where the batch will be conducted.</FormDescription>
+                        <FormDescription>
+                          The physical location where the batch will be
+                          conducted.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -480,11 +556,14 @@ export default function NewBatchPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select 
+                        <Select
                           onValueChange={(value) => {
-                            console.log(`Setting status for batch ${index} to:`, value);
+                            console.log(
+                              `Setting status for batch ${index} to:`,
+                              value
+                            );
                             field.onChange(value);
-                          }} 
+                          }}
                           value={field.value}
                         >
                           <FormControl>
@@ -505,7 +584,9 @@ export default function NewBatchPage() {
                             <SelectItem value="cancelled">Cancelled</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>Current status of the batch.</FormDescription>
+                        <FormDescription>
+                          Current status of the batch.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -516,7 +597,9 @@ export default function NewBatchPage() {
 
                 <div className="space-y-2">
                   <h3 className="text-lg font-medium">Zoom Meeting Details</h3>
-                  <p className="text-sm text-muted-foreground">Add Zoom meeting details for online sessions</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add Zoom meeting details for online sessions
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mt-4">
@@ -527,9 +610,14 @@ export default function NewBatchPage() {
                       <FormItem>
                         <FormLabel>Zoom Meeting Link</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://zoom.us/j/123456789" {...field} />
+                          <Input
+                            placeholder="https://zoom.us/j/123456789"
+                            {...field}
+                          />
                         </FormControl>
-                        <FormDescription>The URL for joining the Zoom meeting.</FormDescription>
+                        <FormDescription>
+                          The URL for joining the Zoom meeting.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -544,7 +632,9 @@ export default function NewBatchPage() {
                         <FormControl>
                           <Input placeholder="123 456 7890" {...field} />
                         </FormControl>
-                        <FormDescription>The ID for the Zoom meeting.</FormDescription>
+                        <FormDescription>
+                          The ID for the Zoom meeting.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -559,7 +649,9 @@ export default function NewBatchPage() {
                         <FormControl>
                           <Input placeholder="abc123" {...field} />
                         </FormControl>
-                        <FormDescription>The password for the Zoom meeting.</FormDescription>
+                        <FormDescription>
+                          The password for the Zoom meeting.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -569,13 +661,22 @@ export default function NewBatchPage() {
             </Card>
           ))}
 
-          <Button type="button" variant="outline" onClick={addBatch} className="w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addBatch}
+            className="w-full"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Another Batch
           </Button>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => router.push("/batches")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/batches")}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
@@ -592,5 +693,5 @@ export default function NewBatchPage() {
         </form>
       </Form>
     </div>
-  )
+  );
 }
