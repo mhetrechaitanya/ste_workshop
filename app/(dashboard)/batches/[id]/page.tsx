@@ -36,8 +36,10 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
   const [isAddSessionDialogOpen, setIsAddSessionDialogOpen] = useState(false)
 
   useEffect(() => {
-    fetchBatchData()
-  }, [params.id])
+    if (params?.id) {
+      fetchBatchData()
+    }
+  }, [params?.id])
 
   const fetchBatchData = async () => {
     setIsLoading(true)
@@ -50,7 +52,7 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
         batch_name,
         start_date,
         end_date,
-        schedule,
+        selected_dates,
         location,
         instructor,
         status,
@@ -64,7 +66,7 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
           capacity
         )
       `)
-        .eq("id", params.id)
+        .eq("id", params?.id)
         .single()
 
       if (batchError) throw batchError
@@ -85,7 +87,7 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
           phone
         )
       `)
-        .eq("batch_id", params.id)
+        .eq("batch_id", params?.id)
         .order("enrollment_date", { ascending: false })
 
       if (enrollmentsError) throw enrollmentsError
@@ -94,27 +96,27 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
       const formattedBatch = {
         id: batchData.id,
         name: batchData.batch_name,
-        workshop: batchData.workshops.name,
+        workshop: batchData.workshops?.[0]?.name || "Unknown Workshop",
         workshopId: batchData.workshop_id,
         startDate: batchData.start_date,
         endDate: batchData.end_date,
-        schedule: batchData.schedule,
+        selected_dates: batchData.selected_dates || [],
         instructor: batchData.instructor,
         location: batchData.location,
         status: batchData.status,
-        students: `${enrollmentsData.length}/${batchData.workshops.capacity}`,
+        students: `${enrollmentsData.length}/${batchData.workshops?.[0]?.capacity || 0}`,
         zoomLink: batchData.zoom_link,
         zoomId: batchData.zoom_id,
         zoomPassword: batchData.zoom_password,
-        capacity: batchData.workshops.capacity,
+        capacity: batchData.workshops?.[0]?.capacity || 0,
       }
 
       // Format the students data
       const formattedStudents = enrollmentsData.map((enrollment) => ({
         id: enrollment.student_id,
-        name: `${enrollment.students.first_name} ${enrollment.students.last_name}`,
-        email: enrollment.students.email,
-        phone: enrollment.students.phone,
+        name: `${enrollment.students?.[0]?.first_name || ""} ${enrollment.students?.[0]?.last_name || ""}`,
+        email: enrollment.students?.[0]?.email || "",
+        phone: enrollment.students?.[0]?.phone || "",
         joinedDate: enrollment.enrollment_date,
         paymentStatus: enrollment.payment_status,
       }))
@@ -130,6 +132,28 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const formatSelectedDates = (dates: string[]) => {
+    if (!dates || dates.length === 0) {
+      return "No dates selected"
+    }
+    
+    const formattedDates = dates.map(date => {
+      return new Date(date).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    })
+    
+    if (formattedDates.length === 1) {
+      return formattedDates[0]
+    } else if (formattedDates.length === 2) {
+      return `${formattedDates[0]} and ${formattedDates[1]}`
+    } else {
+      return `${formattedDates[0]}, ${formattedDates[1]}, and ${formattedDates.length - 2} more`
     }
   }
 
@@ -193,8 +217,8 @@ export default function BatchDetailPage({ params }: { params: { id: string } }) 
                 <p>{formatDate(batch.endDate)}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Schedule</h3>
-                <p>{batch.schedule}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">Selected Dates</h3>
+                <p>{formatSelectedDates(batch.selected_dates)}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Location</h3>

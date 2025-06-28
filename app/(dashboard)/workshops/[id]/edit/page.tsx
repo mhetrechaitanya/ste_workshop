@@ -17,6 +17,9 @@ import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { supabase } from "@/lib/supabase"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
 
 // Update the formSchema to include image
 const formSchema = z.object({
@@ -29,10 +32,7 @@ const formSchema = z.object({
   category_id: z.number({
     required_error: "Please select a category.",
   }),
-  duration: z.string().min(1, {
-    message: "Duration is required.",
-  }),
-  durationUnit: z.string(),
+  selectedDates: z.array(z.date()).min(1, { message: "Please select at least one date." }),
   fee: z.string().min(1, {
     message: "Fee is required.",
   }),
@@ -52,8 +52,7 @@ interface Workshop {
   name: string
   description: string
   category_id: number
-  duration: string
-  duration_unit: string
+  selected_dates: string[]
   fee: string
   capacity: string
   instructor: string
@@ -80,8 +79,7 @@ export default function EditWorkshopPage({ params }: { params: { id: string } })
       name: "",
       description: "",
       category_id: undefined as unknown as number,
-      duration: "",
-      durationUnit: "weeks",
+      selectedDates: [],
       fee: "",
       capacity: "",
       instructor: "",
@@ -123,8 +121,7 @@ export default function EditWorkshopPage({ params }: { params: { id: string } })
           name: workshopData.name,
           description: workshopData.description,
           category_id: workshopData.category_id,
-          duration: workshopData.duration.toString(),
-          durationUnit: workshopData.duration_unit,
+          selectedDates: workshopData.selected_dates ? workshopData.selected_dates.map((d: string) => new Date(d)) : [],
           fee: workshopData.fee.toString(),
           capacity: workshopData.capacity.toString(),
           instructor: workshopData.instructor,
@@ -157,8 +154,7 @@ export default function EditWorkshopPage({ params }: { params: { id: string } })
           name: values.name,
           description: values.description,
           category_id: values.category_id,
-          duration: Number.parseInt(values.duration),
-          duration_unit: values.durationUnit,
+          selected_dates: values.selectedDates.map((d) => d.toISOString()),
           fee: Number.parseFloat(values.fee),
           capacity: Number.parseInt(values.capacity),
           instructor: values.instructor,
@@ -290,39 +286,31 @@ export default function EditWorkshopPage({ params }: { params: { id: string } })
                     )}
                   />
 
-                  <div className="flex gap-4">
+                  <div className="md:col-span-2">
                     <FormField
                       control={form.control}
-                      name="duration"
+                      name="selectedDates"
                       render={({ field }) => (
-                        <FormItem className="flex-1">
+                        <FormItem>
                           <FormLabel>Duration</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="1" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="durationUnit"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Unit</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select unit" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="days">Days</SelectItem>
-                              <SelectItem value="weeks">Weeks</SelectItem>
-                              <SelectItem value="months">Months</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={field.value && field.value.length > 0 ? "default" : "outline"}
+                                className="w-full justify-start text-left font-normal"
+                                type="button"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value && field.value.length > 0
+                                  ? field.value.map((date: Date) => date.toLocaleDateString()).join(", ")
+                                  : <span>Select dates</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar mode="multiple" selected={field.value} onSelect={field.onChange} numberOfMonths={2} />
+                            </PopoverContent>
+                          </Popover>
+                          <FormDescription>Select one or more dates for the workshop.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

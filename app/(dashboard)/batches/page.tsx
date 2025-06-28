@@ -80,11 +80,11 @@ export default function BatchesPage() {
           return {
             id: batch.id,
             batch_name: batch.batch_name,
-            workshop_name: batch.workshops.name,
+            workshop_name: batch.workshops?.[0]?.name || "Unknown Workshop",
             start_date: batch.start_date,
             end_date: batch.end_date,
             student_count: count || 0,
-            capacity: batch.workshops.capacity,
+            capacity: batch.workshops?.[0]?.capacity || 0,
             status: batch.status,
           }
         }),
@@ -143,11 +143,11 @@ export default function BatchesPage() {
           return {
             id: batch.id,
             batch_name: batch.batch_name,
-            workshop_name: batch.workshops.name,
+            workshop_name: batch.workshops?.[0]?.name || "Unknown Workshop",
             start_date: batch.start_date,
             end_date: batch.end_date,
             student_count: count || 0,
-            capacity: batch.workshops.capacity,
+            capacity: batch.workshops?.[0]?.capacity || 0,
             status: batch.status,
           }
         }),
@@ -175,7 +175,10 @@ export default function BatchesPage() {
     try {
       const { error } = await supabase.from("batches").delete().eq("id", id)
 
-      if (error) throw error
+      if (error) {
+        console.error("Supabase error:", error)
+        throw new Error(error.message || "Failed to delete batch")
+      }
 
       setBatches(batches.filter((batch) => batch.id !== id))
       toast({
@@ -184,9 +187,10 @@ export default function BatchesPage() {
       })
     } catch (error) {
       console.error("Error deleting batch:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete batch. Please try again."
       toast({
         title: "Error",
-        description: "Failed to delete batch. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

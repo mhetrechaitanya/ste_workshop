@@ -15,15 +15,14 @@ import { useToast } from "@/components/ui/use-toast"
 // Import Image component
 import Image from "next/image"
 
-// Update the Workshop interface to include image
+// Update the Workshop interface to include selected_dates
 interface Workshop {
   id: string
   name: string
   category_id: number
   category_name?: string
   description: string
-  duration: number
-  duration_unit: string
+  selected_dates: string[]
   fee: number
   capacity: number
   instructor: string
@@ -131,9 +130,9 @@ export default function WorkshopDetailPage({ params }: { params: { id: string } 
         if (enrollmentsError) throw enrollmentsError
 
         const studentsData = enrollmentsData.map((enrollment) => ({
-          id: enrollment.students.id,
-          first_name: enrollment.students.first_name,
-          last_name: enrollment.students.last_name,
+          id: enrollment.students[0].id,
+          first_name: enrollment.students[0].first_name,
+          last_name: enrollment.students[0].last_name,
           joined_date: enrollment.enrollment_date,
           payment_status: enrollment.payment_status,
         }))
@@ -160,8 +159,26 @@ export default function WorkshopDetailPage({ params }: { params: { id: string } 
     }).format(amount)
   }
 
-  const formatDuration = (duration: number, unit: string) => {
-    return `${duration} ${unit}${duration > 1 ? "s" : ""}`
+  const formatSelectedDates = (dates: string[]) => {
+    if (!dates || dates.length === 0) {
+      return "No dates selected"
+    }
+    
+    const formattedDates = dates.map(date => {
+      return new Date(date).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    })
+    
+    if (formattedDates.length === 1) {
+      return formattedDates[0]
+    } else if (formattedDates.length === 2) {
+      return `${formattedDates[0]} and ${formattedDates[1]}`
+    } else {
+      return `${formattedDates[0]}, ${formattedDates[1]}, and ${formattedDates.length - 2} more`
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -218,8 +235,8 @@ export default function WorkshopDetailPage({ params }: { params: { id: string } 
                 <p>{workshop.category_name}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Duration</h3>
-                <p>{formatDuration(workshop.duration, workshop.duration_unit)}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">Selected Dates</h3>
+                <p>{formatSelectedDates(workshop.selected_dates)}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Fee</h3>

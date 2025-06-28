@@ -15,8 +15,7 @@ interface Workshop {
   id: string
   name: string
   category: string
-  duration: number
-  duration_unit: string
+  selected_dates: string[]
   status: string
 }
 
@@ -38,8 +37,7 @@ export function RecentWorkshops() {
         .select(`
       id,
       name,
-      duration,
-      duration_unit,
+      selected_dates,
       status,
       category_id,
       categories(name)
@@ -52,9 +50,8 @@ export function RecentWorkshops() {
       const formattedWorkshops = data.map((workshop) => ({
         id: workshop.id,
         name: workshop.name,
-        category: workshop.categories?.name || "Uncategorized",
-        duration: workshop.duration,
-        duration_unit: workshop.duration_unit,
+        category: workshop.categories?.[0]?.name || "Uncategorized",
+        selected_dates: workshop.selected_dates || [],
         status: workshop.status,
       }))
 
@@ -79,8 +76,26 @@ export function RecentWorkshops() {
     router.push(`/workshops/${id}`)
   }
 
-  const formatDuration = (duration: number, unit: string) => {
-    return `${duration} ${unit}${duration > 1 ? "s" : ""}`
+  const formatSelectedDates = (dates: string[]) => {
+    if (!dates || dates.length === 0) {
+      return "No dates selected"
+    }
+    
+    const formattedDates = dates.map(date => {
+      return new Date(date).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    })
+    
+    if (formattedDates.length === 1) {
+      return formattedDates[0]
+    } else if (formattedDates.length === 2) {
+      return `${formattedDates[0]} and ${formattedDates[1]}`
+    } else {
+      return `${formattedDates[0]}, ${formattedDates[1]}, and ${formattedDates.length - 2} more`
+    }
   }
 
   return (
@@ -103,7 +118,7 @@ export function RecentWorkshops() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Duration</TableHead>
+                <TableHead>Selected Dates</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -132,7 +147,7 @@ export function RecentWorkshops() {
                   <TableRow key={workshop.id} className="hover:bg-white/50 dark:hover:bg-black/50 transition-colors">
                     <TableCell className="font-medium">{workshop.name}</TableCell>
                     <TableCell>{workshop.category}</TableCell>
-                    <TableCell>{formatDuration(workshop.duration, workshop.duration_unit)}</TableCell>
+                    <TableCell>{formatSelectedDates(workshop.selected_dates)}</TableCell>
                     <TableCell>
                       <Badge
                         className={

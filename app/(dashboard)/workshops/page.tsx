@@ -29,8 +29,7 @@ interface Workshop {
   name: string
   category_id: number
   category_name?: string
-  duration: number
-  duration_unit: string
+  selected_dates: string[]
   fee: number
   status: string
   batches_count?: number
@@ -175,8 +174,26 @@ export default function WorkshopsPage() {
     }).format(amount)
   }
 
-  const formatDuration = (duration: number, unit: string) => {
-    return `${duration} ${unit}${duration > 1 ? "s" : ""}`
+  const formatSelectedDates = (dates: string[]) => {
+    if (!dates || dates.length === 0) {
+      return "No dates selected"
+    }
+    
+    const formattedDates = dates.map(date => {
+      return new Date(date).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    })
+    
+    if (formattedDates.length === 1) {
+      return formattedDates[0]
+    } else if (formattedDates.length === 2) {
+      return `${formattedDates[0]} and ${formattedDates[1]}`
+    } else {
+      return `${formattedDates[0]}, ${formattedDates[1]}, and ${formattedDates.length - 2} more`
+    }
   }
 
   return (
@@ -258,7 +275,7 @@ export default function WorkshopsPage() {
                     <TableRow key={workshop.id}>
                       <TableCell className="font-medium">{workshop.name}</TableCell>
                       <TableCell>{workshop.category_name}</TableCell>
-                      <TableCell>{formatDuration(workshop.duration, workshop.duration_unit)}</TableCell>
+                      <TableCell>{formatSelectedDates(workshop.selected_dates)}</TableCell>
                       <TableCell>{formatCurrency(workshop.fee)}</TableCell>
                       <TableCell>
                         <Badge

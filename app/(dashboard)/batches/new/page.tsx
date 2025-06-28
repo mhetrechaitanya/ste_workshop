@@ -62,8 +62,8 @@ const batchSchema = z.object({
   endTime: z.string().min(1, {
     message: "End time is required.",
   }),
-  schedule: z.string().min(2, {
-    message: "Schedule is required.",
+  selectedDates: z.array(z.date()).min(1, {
+    message: "Please select at least one date.",
   }),
   instructor: z.string().min(2, {
     message: "Instructor name is required.",
@@ -117,7 +117,7 @@ export default function NewBatchPage() {
           batchName: "",
           startDate: today,
           endDate: today,
-          schedule: "",
+          selectedDates: [],
           instructor: "",
           location: "",
           zoomLink: "",
@@ -198,7 +198,7 @@ export default function NewBatchPage() {
             end_date: endDate,
             start_time: batch.startTime,
             end_time: batch.endTime,
-            schedule: batch.schedule,
+            selected_dates: batch.selectedDates.map((d) => d.toISOString()),
             instructor: batch.instructor,
             location: batch.location,
             zoom_link: batch.zoomLink || null,
@@ -241,7 +241,7 @@ export default function NewBatchPage() {
       batchName: "",
       startDate: new Date(),
       endDate: new Date(),
-      schedule: "",
+      selectedDates: [],
       instructor: "",
       location: "",
       zoomLink: "",
@@ -514,15 +514,29 @@ export default function NewBatchPage() {
 
                   <FormField
                     control={control}
-                    name={`batches.${index}.schedule`}
+                    name={`batches.${index}.selectedDates`}
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Schedule</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Mon, Wed, Fri" {...field} />
-                        </FormControl>
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Select Dates</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={field.value && field.value.length > 0 ? "default" : "outline"}
+                              className="w-full justify-start text-left font-normal"
+                              type="button"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value && field.value.length > 0
+                                ? field.value.map((date: Date) => date.toLocaleDateString()).join(", ")
+                                : <span>Select dates</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar mode="multiple" selected={field.value} onSelect={field.onChange} numberOfMonths={2} />
+                          </PopoverContent>
+                        </Popover>
                         <FormDescription>
-                          The days of the week for this batch.
+                          Select one or more dates for this batch.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

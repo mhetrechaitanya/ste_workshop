@@ -3,50 +3,59 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { DayPicker } from "react-day-picker"
+import "react-day-picker/dist/style.css"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+
 import { useToast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
-// Import the ImageUpload component
+import Link from "next/link"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
 
 interface Category {
-  id: number // Changed from string to number based on the DB schema
+  id: number
   name: string
 }
 
-// Update the formSchema to include image
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Workshop name must be at least 2 characters.",
-  }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  category_id: z.number({
-    required_error: "Please select a category.",
-  }),
-  duration: z.string().min(1, {
-    message: "Duration is required.",
-  }),
-  durationUnit: z.string(),
-  fee: z.string().min(1, {
-    message: "Fee is required.",
-  }),
-  capacity: z.string().min(1, {
-    message: "Capacity is required.",
-  }),
-  instructor: z.string().min(2, {
-    message: "Instructor name is required.",
-  }),
+  name: z.string().min(2, { message: "Workshop name must be at least 2 characters." }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters." }),
+  category_id: z.number({ required_error: "Please select a category." }),
+  selectedDates: z.array(z.date()).min(1, { message: "Please select at least one date." }),
+  fee: z.string().min(1, { message: "Fee is required." }),
+  capacity: z.string().min(1, { message: "Capacity is required." }),
+  instructor: z.string().min(2, { message: "Instructor name is required." }),
   status: z.string(),
   image: z.string().nullable(),
 })
@@ -58,15 +67,13 @@ export default function NewWorkshopPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
 
-  // Update the defaultValues in useForm to include image
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       description: "",
       category_id: undefined as unknown as number,
-      duration: "",
-      durationUnit: "weeks",
+      selectedDates: [],
       fee: "",
       capacity: "",
       instructor: "",
@@ -79,11 +86,9 @@ export default function NewWorkshopPage() {
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase.from("categories").select("*").order("name", { ascending: true })
-
         if (error) throw error
         setCategories(data)
       } catch (error) {
-        console.error("Error fetching categories:", error)
         toast({
           title: "Error",
           description: "Failed to load categories. Please try again.",
@@ -93,32 +98,25 @@ export default function NewWorkshopPage() {
         setIsLoadingCategories(false)
       }
     }
-
     fetchCategories()
   }, [toast])
 
-  // Update the onSubmit function to include image
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      const { data, error } = await supabase
-        .from("workshops")
-        .insert([
-          {
-            name: values.name,
-            description: values.description,
-            category_id: values.category_id,
-            duration: Number.parseInt(values.duration),
-            duration_unit: values.durationUnit,
-            fee: Number.parseFloat(values.fee),
-            capacity: Number.parseInt(values.capacity),
-            instructor: values.instructor,
-            status: values.status,
-            image: values.image,
-          },
-        ])
-        .select()
-
+      const { data, error } = await supabase.from("workshops").insert([
+        {
+          name: values.name,
+          description: values.description,
+          category_id: values.category_id,
+          selected_dates: values.selectedDates.map((d) => d.toISOString()),
+          fee: parseFloat(values.fee),
+          capacity: parseInt(values.capacity),
+          instructor: values.instructor,
+          status: values.status,
+          image: values.image,
+        },
+      ])
       if (error) throw error
 
       toast({
@@ -127,7 +125,6 @@ export default function NewWorkshopPage() {
       })
       router.push("/workshops")
     } catch (error) {
-      console.error("Error creating workshop:", error)
       toast({
         title: "Error",
         description: "Failed to create workshop. Please try again.",
@@ -154,21 +151,21 @@ export default function NewWorkshopPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {/* Name */}
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Workshop Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Web Development Bootcamp" {...field} />
-                      </FormControl>
+                      <FormControl><Input placeholder="Web Development Bootcamp" {...field} /></FormControl>
                       <FormDescription>The name of your workshop.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Category */}
                 <FormField
                   control={form.control}
                   name="category_id"
@@ -181,17 +178,12 @@ export default function NewWorkshopPage() {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue
-                              placeholder={isLoadingCategories ? "Loading categories..." : "Select a category"}
-                            />
+                            <SelectValue placeholder={isLoadingCategories ? "Loading..." : "Select a category"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {isLoadingCategories ? (
-                            <div className="flex items-center justify-center p-2">
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              Loading...
-                            </div>
+                            <div className="p-2 text-sm">Loading...</div>
                           ) : (
                             categories.map((category) => (
                               <SelectItem key={category.id} value={category.id.toString()}>
@@ -212,109 +204,92 @@ export default function NewWorkshopPage() {
                   )}
                 />
 
+                {/* Description */}
                 <FormField
                   control={form.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="A comprehensive bootcamp covering HTML, CSS, JavaScript, and more..."
-                          className="min-h-[120px]"
-                          {...field}
-                        />
-                      </FormControl>
+                      <FormControl><Textarea className="min-h-[120px]" {...field} /></FormControl>
                       <FormDescription>Detailed description of the workshop.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="flex gap-4">
-                  <FormField
-                    control={form.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>Duration</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Duration / Dates */}
+                <FormField
+                  control={form.control}
+                  name="selectedDates"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Duration</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={field.value && field.value.length > 0 ? "default" : "outline"}
+                            className="w-full justify-start text-left font-normal"
+                            type="button"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value && field.value.length > 0
+                              ? field.value.map((date: Date) => date.toLocaleDateString()).join(", ")
+                              : <span>Select dates</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar mode="multiple" selected={field.value} onSelect={field.onChange} numberOfMonths={2} />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>Select one or more dates for the workshop.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="durationUnit"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>Unit</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select unit" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="days">Days</SelectItem>
-                            <SelectItem value="weeks">Weeks</SelectItem>
-                            <SelectItem value="months">Months</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
+                {/* Fee */}
                 <FormField
                   control={form.control}
                   name="fee"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Fee (₹)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" {...field} />
-                      </FormControl>
-                      <FormDescription>The fee for the workshop in INR.</FormDescription>
+                      <FormControl><Input type="number" min="0" {...field} /></FormControl>
+                      <FormDescription>Fee in INR.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Capacity */}
                 <FormField
                   control={form.control}
                   name="capacity"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Capacity</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} />
-                      </FormControl>
-                      <FormDescription>Maximum number of students per batch.</FormDescription>
+                      <FormControl><Input type="number" min="1" {...field} /></FormControl>
+                      <FormDescription>Max number of students.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Instructor */}
                 <FormField
                   control={form.control}
                   name="instructor"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Instructor</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormDescription>The primary instructor for this workshop.</FormDescription>
+                      <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Status */}
                 <FormField
                   control={form.control}
                   name="status"
@@ -334,13 +309,12 @@ export default function NewWorkshopPage() {
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>Current status of the workshop.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Add the ImageUpload component to the form */}
-                {/* Add this after the status FormField and before the form buttons */}
+
+                {/* Image */}
                 <FormField
                   control={form.control}
                   name="image"
@@ -350,10 +324,7 @@ export default function NewWorkshopPage() {
                       <FormControl>
                         <ImageUpload value={field.value || null} onChange={field.onChange} disabled={isSubmitting} />
                       </FormControl>
-                      <FormDescription>
-                        Upload an image for this workshop. Accepted formats: JPG, PNG, WEBP. Maximum size: 2MB. Minimum
-                        resolution: 800x600px.
-                      </FormDescription>
+                      <FormDescription>Upload a JPG, PNG, or WEBP (Max: 2MB).</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -361,18 +332,9 @@ export default function NewWorkshopPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => router.push("/workshops")}>
-                  Cancel
-                </Button>
+                <Button type="button" variant="outline" onClick={() => router.push("/workshops")}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    "Create Workshop"
-                  )}
+                  {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating...</> : "Create Workshop"}
                 </Button>
               </div>
             </form>
