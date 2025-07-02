@@ -189,6 +189,11 @@ export default function WorkshopDetailPage({ params }: { params: { id: string } 
     })
   }
 
+  const formatDateDMY = (dateString: string) => {
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-GB'); // dd/MM/yyyy
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh]">
@@ -307,7 +312,7 @@ export default function WorkshopDetailPage({ params }: { params: { id: string } 
               <TabsContent value="description" className="mt-4">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Workshop Description</h3>
-                  <p>{workshop.description}</p>
+                  <div dangerouslySetInnerHTML={{ __html: workshop.description }} />
                 </div>
               </TabsContent>
               <TabsContent value="batches" className="mt-4">

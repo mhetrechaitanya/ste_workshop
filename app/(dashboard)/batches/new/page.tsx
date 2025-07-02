@@ -50,14 +50,8 @@ const batchSchema = z.object({
   batchName: z.string().min(2, {
     message: "Batch name must be at least 2 characters.",
   }),
-  startDate: z.date({
-    required_error: "Start date is required.",
-  }),
   startTime: z.string().min(1, {
     message: "Start time is required.",
-  }),
-  endDate: z.date({
-    required_error: "End date is required.",
   }),
   endTime: z.string().min(1, {
     message: "End time is required.",
@@ -115,8 +109,6 @@ export default function NewBatchPage() {
       batches: [
         {
           batchName: "",
-          startDate: today,
-          endDate: today,
           selectedDates: [],
           instructor: "",
           location: "",
@@ -173,20 +165,24 @@ export default function NewBatchPage() {
       const createdBatches = [];
 
       for (const batch of values.batches) {
-        // Combine date and time for start and end dates
-        const startDateTime = new Date(batch.startDate);
-        const [startHours, startMinutes] = batch.startTime
-          .split(":")
-          .map(Number);
-        startDateTime.setHours(startHours, startMinutes, 0);
+        // Derive start_date and end_date from selectedDates
+        const sortedDates = [...batch.selectedDates].sort((a, b) => a.getTime() - b.getTime());
+        const startDate = sortedDates[0] ? new Date(sortedDates[0]) : null;
+        const endDate = sortedDates[sortedDates.length - 1] ? new Date(sortedDates[sortedDates.length - 1]) : null;
 
-        const endDateTime = new Date(batch.endDate);
-        const [endHours, endMinutes] = batch.endTime.split(":").map(Number);
-        endDateTime.setHours(endHours, endMinutes, 0);
+        // Combine with startTime and endTime
+        if (startDate && batch.startTime) {
+          const [startHours, startMinutes] = batch.startTime.split(":").map(Number);
+          startDate.setHours(startHours, startMinutes, 0);
+        }
+        if (endDate && batch.endTime) {
+          const [endHours, endMinutes] = batch.endTime.split(":").map(Number);
+          endDate.setHours(endHours, endMinutes, 0);
+        }
 
         // Format dates for database
-        const startDate = startDateTime.toISOString();
-        const endDate = endDateTime.toISOString();
+        const startDateISO = startDate ? startDate.toISOString() : null;
+        const endDateISO = endDate ? endDate.toISOString() : null;
 
         // Insert batch into database
         const { data, error } = await supabase
@@ -194,8 +190,8 @@ export default function NewBatchPage() {
           .insert({
             batch_name: batch.batchName,
             workshop_id: values.workshop ? parseInt(values.workshop, 10) : null,
-            start_date: startDate,
-            end_date: endDate,
+            start_date: startDateISO,
+            end_date: endDateISO,
             start_time: batch.startTime,
             end_time: batch.endTime,
             selected_dates: batch.selectedDates.map((d) => d.toISOString()),
@@ -239,8 +235,6 @@ export default function NewBatchPage() {
   function addBatch() {
     append({
       batchName: "",
-      startDate: new Date(),
-      endDate: new Date(),
       selectedDates: [],
       instructor: "",
       location: "",
@@ -392,128 +386,6 @@ export default function NewBatchPage() {
 
                   <FormField
                     control={control}
-                    name={`batches.${index}.startDate`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Start Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={
-                                  "w-full justify-start text-left font-normal"
-                                }
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormDescription>
-                          The start date of the batch.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`batches.${index}.startTime`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Time</FormLabel>
-                        <div className="flex items-center">
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <Clock className="ml-2 h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <FormDescription>
-                          The start time of sessions.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`batches.${index}.endDate`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>End Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={
-                                  "w-full justify-start text-left font-normal"
-                                }
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormDescription>
-                          The end date of the batch.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`batches.${index}.endTime`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Time</FormLabel>
-                        <div className="flex items-center">
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <Clock className="ml-2 h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <FormDescription>
-                          The end time of sessions.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
                     name={`batches.${index}.selectedDates`}
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
@@ -601,6 +473,34 @@ export default function NewBatchPage() {
                         <FormDescription>
                           Current status of the batch.
                         </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name={`batches.${index}.startTime`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name={`batches.${index}.endTime`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

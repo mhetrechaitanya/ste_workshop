@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { CalendarIcon } from "lucide-react"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 
 // Update the formSchema to include image
 const formSchema = z.object({
@@ -274,10 +275,11 @@ export default function EditWorkshopPage({ params }: { params: { id: string } })
                       <FormItem className="md:col-span-2">
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
                             placeholder="A comprehensive bootcamp covering HTML, CSS, JavaScript, and more..."
                             className="min-h-[120px]"
-                            {...field}
                           />
                         </FormControl>
                         <FormDescription>Detailed description of the workshop.</FormDescription>

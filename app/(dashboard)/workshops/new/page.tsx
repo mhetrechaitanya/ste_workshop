@@ -42,6 +42,11 @@ import { ImageUpload } from "@/components/ui/image-upload"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
+import dynamic from "next/dynamic"
+import { useTheme } from "@mui/material/styles"
+
+// Import the RichTextEditor component
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 
 interface Category {
   id: number
@@ -63,9 +68,11 @@ const formSchema = z.object({
 export default function NewWorkshopPage() {
   const { toast } = useToast()
   const router = useRouter()
+  const theme = useTheme()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+  const [isClient, setIsClient] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -81,6 +88,10 @@ export default function NewWorkshopPage() {
       image: null,
     },
   })
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -101,13 +112,31 @@ export default function NewWorkshopPage() {
     fetchCategories()
   }, [toast])
 
+  // Helper function to strip HTML tags for validation
+  const stripHtmlTags = (html: string): string => {
+    const div = document.createElement('div')
+    div.innerHTML = html
+    return div.textContent || div.innerText || ''
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Validate description length without HTML tags
+    const plainTextDescription = stripHtmlTags(values.description)
+    if (plainTextDescription.length < 10) {
+      toast({
+        title: "Validation Error",
+        description: "Description must be at least 10 characters long (excluding formatting).",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const { data, error } = await supabase.from("workshops").insert([
         {
           name: values.name,
-          description: values.description,
+          description: values.description, // This will now contain HTML formatting
           category_id: values.category_id,
           selected_dates: values.selectedDates.map((d) => d.toISOString()),
           fee: parseFloat(values.fee),
@@ -151,6 +180,7 @@ export default function NewWorkshopPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                
                 {/* Name */}
                 <FormField
                   control={form.control}
@@ -204,15 +234,23 @@ export default function NewWorkshopPage() {
                   )}
                 />
 
-                {/* Description */}
+                {/* Description - Rich Text Editor */}
                 <FormField
                   control={form.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel>Description</FormLabel>
-                      <FormControl><Textarea className="min-h-[120px]" {...field} /></FormControl>
-                      <FormDescription>Detailed description of the workshop.</FormDescription>
+                      <FormControl>
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Enter detailed description of the workshop..."
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Detailed description of the workshop. Use the toolbar to format text, add lists, links, etc.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

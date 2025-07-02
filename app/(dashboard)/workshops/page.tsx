@@ -33,6 +33,7 @@ interface Workshop {
   fee: number
   status: string
   batches_count?: number
+  description: string
 }
 
 export default function WorkshopsPage() {
