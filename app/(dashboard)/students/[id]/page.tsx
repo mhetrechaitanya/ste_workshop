@@ -9,21 +9,30 @@ import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
 
 export default function StudentDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const [student, setStudent] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Mock student data - in a real app, this would be fetched from an API
-  const student = {
-    id: params.id,
-    firstName: "Rahul",
-    lastName: "Sharma",
-    email: "rahul.sharma@example.com",
-    phone: "+91 98765 43210",
-    address: "123 Main St, Mumbai, Maharashtra, 400001",
-    joinedDate: "10 Jan 2025",
-    status: "Active",
-  }
+  useEffect(() => {
+    const fetchStudent = async () => {
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .eq("id", params.id)
+        .single()
+      setStudent(data)
+      setIsLoading(false)
+    }
+    fetchStudent()
+  }, [params.id])
+
+  if (isLoading) return <div>Loading...</div>
+  if (!student) return <div>Student not found</div>
 
   return (
     <div className="flex flex-col gap-4">
@@ -43,12 +52,12 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
             <div className="flex flex-col items-center">
               <Avatar className="h-24 w-24">
                 <AvatarFallback className="text-2xl">
-                  {student.firstName.charAt(0)}
-                  {student.lastName.charAt(0)}
+                  {student.first_name?.charAt(0)}
+                  {student.last_name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="mt-4 text-center">
-                {student.firstName} {student.lastName}
+                {student.first_name} {student.last_name}
               </CardTitle>
               <CardDescription className="text-center">Student ID: {student.id}</CardDescription>
               <Badge className="mt-2 bg-green-500">{student.status}</Badge>
@@ -70,7 +79,7 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Joined Date</h3>
-                <p>{student.joinedDate}</p>
+                <p>{student.joined_date}</p>
               </div>
               <div className="pt-4 flex flex-col gap-2">
                 <Link href={`/students/${student.id}/edit`}>
