@@ -246,6 +246,7 @@ export default function WorkshopsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Duration</TableHead>
+                  <TableHead>Start Date</TableHead>
                   <TableHead>Fee</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Batches</TableHead>
@@ -276,7 +277,8 @@ export default function WorkshopsPage() {
                     <TableRow key={workshop.id}>
                       <TableCell className="font-medium">{workshop.name}</TableCell>
                       <TableCell>{workshop.category_name}</TableCell>
-                      <TableCell>{formatSelectedDates(workshop.selected_dates)}</TableCell>
+                      <TableCell>{workshop.duration_value} {workshop.duration_unit}</TableCell>
+                      <TableCell>{workshop.start_date ? new Date(workshop.start_date).toLocaleDateString('en-GB') : '-'}</TableCell>
                       <TableCell>{formatCurrency(workshop.fee)}</TableCell>
                       <TableCell>
                         <Badge

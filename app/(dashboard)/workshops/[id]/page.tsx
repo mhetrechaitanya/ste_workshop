@@ -29,6 +29,10 @@ interface Workshop {
   status: string
   created_at: string
   image: string | null
+  start_date?: string
+  session_start_time?: string
+  duration_value?: number
+  duration_unit?: string
 }
 
 interface Batch {
@@ -240,8 +244,16 @@ export default function WorkshopDetailPage({ params }: { params: { id: string } 
                 <p>{workshop.category_name}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Selected Dates</h3>
-                <p>{formatSelectedDates(workshop.selected_dates)}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">Duration</h3>
+                <p>{workshop.duration_value} {workshop.duration_unit}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Start Date</h3>
+                <p>{workshop.start_date ? formatDate(workshop.start_date) : '-'}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Session Start Time</h3>
+                <p>{workshop.session_start_time || '-'}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Fee</h3>

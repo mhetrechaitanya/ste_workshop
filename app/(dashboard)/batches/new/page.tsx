@@ -415,6 +415,36 @@ export default function NewBatchPage() {
                     )}
                   />
 
+                  {/* Move Start Time and End Time fields here, right after selected dates */}
+                  <FormField
+                    control={control}
+                    name={`batches.${index}.startTime`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name={`batches.${index}.endTime`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Location and Status fields follow */}
                   <FormField
                     control={control}
                     name={`batches.${index}.location`}
@@ -473,34 +503,6 @@ export default function NewBatchPage() {
                         <FormDescription>
                           Current status of the batch.
                         </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`batches.${index}.startTime`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Time</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`batches.${index}.endTime`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Time</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

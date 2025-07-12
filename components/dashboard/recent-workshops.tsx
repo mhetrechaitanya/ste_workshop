@@ -37,7 +37,9 @@ export function RecentWorkshops() {
         .select(`
       id,
       name,
-      selected_dates,
+      duration_value,
+      duration_unit,
+      start_date,
       status,
       category_id,
       categories(name)
@@ -118,7 +120,8 @@ export function RecentWorkshops() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Selected Dates</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Start Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -147,7 +150,8 @@ export function RecentWorkshops() {
                   <TableRow key={workshop.id} className="hover:bg-white/50 dark:hover:bg-black/50 transition-colors">
                     <TableCell className="font-medium">{workshop.name}</TableCell>
                     <TableCell>{workshop.category}</TableCell>
-                    <TableCell>{formatSelectedDates(workshop.selected_dates)}</TableCell>
+                    <TableCell>{workshop.duration_value} {workshop.duration_unit}</TableCell>
+                    <TableCell>{workshop.start_date ? new Date(workshop.start_date).toLocaleDateString('en-GB') : '-'}</TableCell>
                     <TableCell>
                       <Badge
                         className={
