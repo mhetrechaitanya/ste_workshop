@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FormControl } from "@/components/ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface RichTextEditorProps {
   value: string
@@ -11,6 +12,50 @@ interface RichTextEditorProps {
 export function RichTextEditor({ value, onChange, placeholder = "Enter description...", className }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const isInitialized = useRef(false)
+  const [currentFontSize, setCurrentFontSize] = useState("14")
+  const [currentFontColor, setCurrentFontColor] = useState("#000000")
+  const [currentFontFamily, setCurrentFontFamily] = useState("Arial")
+
+  const fontSizes = [
+    { value: "10", label: "10px" },
+    { value: "12", label: "12px" },
+    { value: "14", label: "14px" },
+    { value: "16", label: "16px" },
+    { value: "18", label: "18px" },
+    { value: "20", label: "20px" },
+    { value: "24", label: "24px" },
+    { value: "28", label: "28px" },
+    { value: "32", label: "32px" },
+    { value: "36", label: "36px" },
+  ]
+
+  const fontColors = [
+    { value: "#000000", label: "Black", color: "#000000" },
+    { value: "#dc2626", label: "Red", color: "#dc2626" },
+    { value: "#ea580c", label: "Orange", color: "#ea580c" },
+    { value: "#ca8a04", label: "Yellow", color: "#ca8a04" },
+    { value: "#16a34a", label: "Green", color: "#16a34a" },
+    { value: "#2563eb", label: "Blue", color: "#2563eb" },
+    { value: "#7c3aed", label: "Purple", color: "#7c3aed" },
+    { value: "#be185d", label: "Pink", color: "#be185d" },
+    { value: "#374151", label: "Gray", color: "#374151" },
+    { value: "#0891b2", label: "Cyan", color: "#0891b2" },
+  ]
+
+  const fontFamilies = [
+    { value: "Arial", label: "Arial", family: "Arial, sans-serif" },
+    { value: "Helvetica", label: "Helvetica", family: "Helvetica, sans-serif" },
+    { value: "Times New Roman", label: "Times New Roman", family: "'Times New Roman', serif" },
+    { value: "Georgia", label: "Georgia", family: "Georgia, serif" },
+    { value: "Verdana", label: "Verdana", family: "Verdana, sans-serif" },
+    { value: "Courier New", label: "Courier New", family: "'Courier New', monospace" },
+    { value: "Trebuchet MS", label: "Trebuchet MS", family: "'Trebuchet MS', sans-serif" },
+    { value: "Comic Sans MS", label: "Comic Sans MS", family: "'Comic Sans MS', cursive" },
+    { value: "Impact", label: "Impact", family: "Impact, sans-serif" },
+    { value: "Lucida Console", label: "Lucida Console", family: "'Lucida Console', monospace" },
+    { value: "Tahoma", label: "Tahoma", family: "Tahoma, sans-serif" },
+    { value: "Palatino", label: "Palatino", family: "Palatino, serif" },
+  ]
 
   useEffect(() => {
     if (!editorRef.current || isInitialized.current) return
@@ -33,6 +78,44 @@ export function RichTextEditor({ value, onChange, placeholder = "Enter descripti
     document.execCommand(command, false, value)
     editorRef.current?.focus()
     handleInput()
+  }
+
+  const handleFontSizeChange = (size: string) => {
+    setCurrentFontSize(size)
+    executeCommand('fontSize', '7') // Set to largest size first
+    
+    // Apply custom font size using CSS
+    const selection = window.getSelection()
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      if (!range.collapsed) {
+        const span = document.createElement('span')
+        span.style.fontSize = `${size}px`
+        try {
+          range.surroundContents(span)
+        } catch (e) {
+          // If range.surroundContents fails, use insertNode
+          span.appendChild(range.extractContents())
+          range.insertNode(span)
+        }
+        selection.removeAllRanges()
+        selection.addRange(range)
+      }
+    }
+    handleInput()
+  }
+
+  const handleFontColorChange = (color: string) => {
+    setCurrentFontColor(color)
+    executeCommand('foreColor', color)
+  }
+
+  const handleFontFamilyChange = (fontFamily: string) => {
+    setCurrentFontFamily(fontFamily)
+    const fontObj = fontFamilies.find(f => f.value === fontFamily)
+    if (fontObj) {
+      executeCommand('fontName', fontObj.family)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -58,7 +141,74 @@ export function RichTextEditor({ value, onChange, placeholder = "Enter descripti
   return (
     <div className="border rounded-md overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b bg-gray-50">
+      <div className="flex items-center gap-1 p-2 border-b bg-gray-50 flex-wrap">
+        {/* Font Family Selector */}
+        <div className="flex items-center gap-1 mr-2">
+          <span className="text-xs text-gray-600 whitespace-nowrap">Font:</span>
+          <Select value={currentFontFamily} onValueChange={handleFontFamilyChange}>
+            <SelectTrigger className="w-32 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fontFamilies.map((font) => (
+                <SelectItem key={font.value} value={font.value} className="text-xs">
+                  <span style={{ fontFamily: font.family }}>{font.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Font Size Selector */}
+        <div className="flex items-center gap-1 mr-2">
+          <span className="text-xs text-gray-600 whitespace-nowrap">Size:</span>
+          <Select value={currentFontSize} onValueChange={handleFontSizeChange}>
+            <SelectTrigger className="w-20 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fontSizes.map((size) => (
+                <SelectItem key={size.value} value={size.value} className="text-xs">
+                  {size.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Font Color Selector */}
+        <div className="flex items-center gap-1 mr-2">
+          <span className="text-xs text-gray-600 whitespace-nowrap">Color:</span>
+          <Select value={currentFontColor} onValueChange={handleFontColorChange}>
+            <SelectTrigger className="w-24 h-8 text-xs">
+              <SelectValue>
+                <div className="flex items-center gap-1">
+                  <div 
+                    className="w-3 h-3 rounded border"
+                    style={{ backgroundColor: currentFontColor }}
+                  />
+                  <span className="text-xs">Color</span>
+                </div>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {fontColors.map((color) => (
+                <SelectItem key={color.value} value={color.value} className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded border"
+                      style={{ backgroundColor: color.color }}
+                    />
+                    {color.label}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
         <button
           type="button"
           onClick={() => executeCommand('bold')}

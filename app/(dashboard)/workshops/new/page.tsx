@@ -62,8 +62,8 @@ const formSchema = z.object({
   duration_unit: z.enum(["days", "weeks", "months"], { required_error: "Select a unit." }),
   sessions_per_day: z.coerce.number().min(1, { message: "Enter sessions per day." }),
   minutes_per_session: z.coerce.number().min(1, { message: "Enter minutes per session." }),
-  start_date: z.date({ required_error: "Select a start date." }),
-  session_start_time: z.string().min(1, { message: "Enter session start time." }),
+  // start_date: z.date({ required_error: "Select a start date." }),
+  // session_start_time: z.string().min(1, { message: "Enter session start time." }),
   fee: z.string().min(1, { message: "Fee is required." }),
   capacity: z.string().min(1, { message: "Capacity is required." }),
   instructor: z.string().min(2, { message: "Instructor name is required." }),
@@ -90,8 +90,8 @@ export default function NewWorkshopPage() {
       duration_unit: "days",
       sessions_per_day: 1,
       minutes_per_session: 60,
-      start_date: undefined,
-      session_start_time: "09:00",
+      // start_date: undefined,
+      // session_start_time: "09:00",
       fee: "",
       capacity: "",
       instructor: "",
@@ -153,8 +153,8 @@ export default function NewWorkshopPage() {
           duration_unit: values.duration_unit,
           sessions_per_day: values.sessions_per_day,
           minutes_per_session: values.minutes_per_session,
-          start_date: values.start_date ? values.start_date.toISOString() : null,
-          session_start_time: values.session_start_time,
+          // start_date: values.start_date ? values.start_date.toISOString() : null,
+          // session_start_time: values.session_start_time,
           fee: parseFloat(values.fee),
           capacity: parseInt(values.capacity),
           instructor: values.instructor,
@@ -325,7 +325,8 @@ export default function NewWorkshopPage() {
                   )}
                 />
 
-                {/* Start Date */}
+                {/* Start Date - Temporarily Hidden */}
+                {/*
                 <FormField
                   control={form.control}
                   name="start_date"
@@ -343,8 +344,10 @@ export default function NewWorkshopPage() {
                     </FormItem>
                   )}
                 />
+                */}
 
-                {/* Session Start Time */}
+                {/* Session Start Time - Temporarily Hidden */}
+                {/*
                 <FormField
                   control={form.control}
                   name="session_start_time"
@@ -358,6 +361,7 @@ export default function NewWorkshopPage() {
                     </FormItem>
                   )}
                 />
+                */}
 
                 {/* Fee */}
                 <FormField
