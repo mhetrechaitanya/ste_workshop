@@ -64,22 +64,41 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
 
       console.log("Uploading file:", selectedFile.name, "type:", selectedFile.type, "size:", selectedFile.size)
 
+      // First test if API is reachable
+      console.log("Testing API connectivity...")
+      try {
+        const testResponse = await fetch("/api/test", {
+          method: "POST",
+        })
+        console.log("API test response:", testResponse.status)
+        if (!testResponse.ok) {
+          throw new Error("API is not accessible")
+        }
+      } catch (testError) {
+        console.error("API test failed:", testError)
+        throw new Error("Cannot connect to server. Please check your connection and try again.")
+      }
+
       // Send the file to our API route
+      console.log("Sending upload request...")
       const response = await fetch("/api/s3/upload", {
         method: "POST",
         body: formData,
       })
 
+      console.log("Upload response status:", response.status, response.statusText)
+
       let data
       try {
         // Try to parse the response as JSON
         data = await response.json()
+        console.log("Upload response data:", data)
       } catch (parseError) {
         console.error("Failed to parse response as JSON:", parseError)
         // If response isn't JSON, get the text for debugging
         const text = await response.text()
         console.error("Response text:", text)
-        throw new Error(`Upload failed: ${response.status} ${response.statusText}`)
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}. Server returned invalid response.`)
       }
 
       if (!response.ok) {
@@ -100,7 +119,19 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       setIsDialogOpen(false)
     } catch (error) {
       console.error("Error uploading image:", error)
-      setUploadError(error instanceof Error ? error.message : "Failed to upload image")
+      let errorMessage = "Failed to upload image"
+      
+      if (error instanceof Error) {
+        if (error.message.includes("fetch")) {
+          errorMessage = "Network error: Cannot connect to server. Please check your internet connection."
+        } else if (error.message.includes("Server configuration error")) {
+          errorMessage = "Server configuration issue. Please contact support."
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      setUploadError(errorMessage)
     } finally {
       setIsUploading(false)
     }
