@@ -32,6 +32,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Enter descripti
   const fontColors = [
     { value: "#000000", label: "Black", color: "#000000" },
     { value: "#dc2626", label: "Red", color: "#dc2626" },
+    { value: "#900000", label: "Stei Red", color: "#900000" },
     { value: "#ea580c", label: "Orange", color: "#ea580c" },
     { value: "#ca8a04", label: "Yellow", color: "#ca8a04" },
     { value: "#16a34a", label: "Green", color: "#16a34a" },
@@ -40,6 +41,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Enter descripti
     { value: "#be185d", label: "Pink", color: "#be185d" },
     { value: "#374151", label: "Gray", color: "#374151" },
     { value: "#0891b2", label: "Cyan", color: "#0891b2" },
+    { value: "#92400e", label: "Brown", color: "#92400e" },
   ]
 
   const fontFamilies = [
